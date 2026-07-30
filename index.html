@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timer PWA</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='112' fill='%230f172a'/><circle cx='256' cy='256' r='180' fill='none' stroke='%2310b981' stroke-width='32'/><path d='M256 130V256L330 330' fill='none' stroke='%23f8fafc' stroke-width='32' stroke-linecap='round' stroke-linejoin='round'/></svg>" />
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Top Bar / Wake Lock Toggle -->
+    <header class="top-bar">
+      <button id="wakeLockBtn" class="toggle-btn" aria-label="Scherm aanhouden toggle">
+        <span class="icon">📱</span>
+        <span class="label">Scherm aan: <strong id="wakeLockStatus">UIT</strong></span>
+      </button>
+    </header>
+
+    <!-- Timer Weergave -->
+    <main class="timer-section">
+      <!-- Invoervelden (zichtbaar als timer stilstaat) -->
+      <div id="inputGroup" class="time-inputs">
+        <div class="input-field">
+          <input type="number" id="inputMin" min="0" max="999" placeholder="00" value="05" />
+          <label for="inputMin">min</label>
+        </div>
+        <span class="colon">:</span>
+        <div class="input-field">
+          <input type="number" id="inputSec" min="0" max="59" placeholder="00" value="00" />
+          <label for="inputSec">sec</label>
+        </div>
+      </div>
+
+      <!-- Klok display (zichtbaar als timer loopt/gepauzeerd is) -->
+      <div id="timeDisplay" class="time-display hidden">05:00</div>
+    </main>
+
+    <!-- Bedieningsknoppen -->
+    <footer class="controls">
+      <button id="startBtn" class="btn btn-primary">Start</button>
+      <button id="pauseBtn" class="btn btn-secondary hidden">Pauze</button>
+      <button id="resetBtn" class="btn btn-outline hidden">Reset</button>
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
