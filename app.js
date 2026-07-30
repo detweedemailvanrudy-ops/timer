@@ -17,8 +17,9 @@ let totalSeconds = 0;
 let initialTotalSeconds = 0; 
 let isPaused = false;
 let isRunning = false;
+let isAlarming = false; // Nieuwe status om de alarm-fase te volgen
 
-// --- AUDIO LOGICA (NIEUW) ---
+// --- AUDIO LOGICA ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let alarmInterval = null;
 let alarmTimeout = null;
@@ -33,25 +34,25 @@ function playSingleBeep() {
   osc.frequency.value = 880; 
   gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
   osc.start();
-  osc.stop(audioCtx.currentTime + 0.3); // Kortere, strakke piep
+  osc.stop(audioCtx.currentTime + 0.3);
 }
 
-// Start een repeterend alarm van max 30 sec
+// Start repeterend alarm (max 30 sec)
 function startAlarm() {
-  playSingleBeep(); // Direct de eerste piep
+  isAlarming = true;
+  playSingleBeep();
   
-  // Herhaal de piep elke seconde
   alarmInterval = setInterval(() => {
     playSingleBeep();
   }, 1000);
 
-  // Stop het alarm automatisch na 30 seconden (30.000 ms)
   alarmTimeout = setTimeout(() => {
     stopAlarm();
+    resetUI(); // Reset de UI als 30 seconden voorbij zijn
   }, 30000);
 }
 
-// Stop het alarm handmatig of automatisch
+// Stop het alarm
 function stopAlarm() {
   if (alarmInterval) {
     clearInterval(alarmInterval);
@@ -61,6 +62,7 @@ function stopAlarm() {
     clearTimeout(alarmTimeout);
     alarmTimeout = null;
   }
+  isAlarming = false;
 }
 
 // --- SCREEN WAKE LOCK LOGICA ---
@@ -107,6 +109,20 @@ document.addEventListener('visibilitychange', async () => {
   }
 });
 
+// --- INVOER FORMATTEREN (VOORLOOPNUL) ---
+function formatInputPadding(inputElement, maxValue = 999) {
+  let val = parseInt(inputElement.value, 10);
+  if (isNaN(val) || val < 0) val = 0;
+  if (val > maxValue) val = maxValue;
+  
+  // Format met minimaal 2 cijfers (bijv. 1 -> 01)
+  inputElement.value = val.toString().padStart(2, '0');
+}
+
+// Luister naar wanneer de gebruiker het invoerveld verlaat (blur)
+inputMin.addEventListener('blur', () => formatInputPadding(inputMin, 999));
+inputSec.addEventListener('blur', () => formatInputPadding(inputSec, 59));
+
 // --- TIMER LOGICA ---
 
 function updateProgress(secondsLeft) {
@@ -127,8 +143,12 @@ function updateDisplay() {
 }
 
 function handleActionButton() {
-  // Als het alarm nog piept, stopt een klik op de knop direct het geluid
-  stopAlarm();
+  // Als het alarm afgaat/is afgelopen, brengt een klik op de knop je terug naar de beginstand
+  if (isAlarming || actionBtn.textContent === 'OK') {
+    stopAlarm();
+    resetUI();
+    return;
+  }
 
   if (!isRunning && !isPaused) {
     startTimer();
@@ -140,8 +160,12 @@ function handleActionButton() {
 }
 
 function startTimer() {
-  stopAlarm(); // Zeker weten dat eventueel oud alarm uit is
+  stopAlarm();
   if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  // Zorg dat voorloopnullen ook direct goedstaan bij het starten
+  formatInputPadding(inputMin, 999);
+  formatInputPadding(inputSec, 59);
 
   const mins = parseInt(inputMin.value, 10) || 0;
   const secs = parseInt(inputSec.value, 10) || 0;
@@ -179,7 +203,6 @@ function tick() {
 
   if (totalSeconds <= 0) {
     clearInterval(timerInterval);
-    startAlarm(); // Start de 30-seconden pieploop
     completeTimer();
   }
 }
@@ -203,14 +226,18 @@ function resumeTimer() {
 function completeTimer() {
   isRunning = false;
   isPaused = false;
-  resetUI();
   
-  // Verander knoptekst tijdelijk naar "OK" of "Stop Alarm" als het alarm afgaat
+  startAlarm(); // Start het repeterende geluid
+  
+  // Zet de knop klaar voor afmelden
   actionBtn.textContent = 'OK';
+  actionBtn.classList.add('btn-primary');
+  actionBtn.style.backgroundColor = '';
+  actionBtn.style.color = '';
 }
 
 function resetTimer() {
-  stopAlarm(); // Stop ook het geluid bij een reset
+  stopAlarm();
   clearInterval(timerInterval);
   isRunning = false;
   isPaused = false;
@@ -235,11 +262,11 @@ function resetUI() {
 actionBtn.addEventListener('click', handleActionButton);
 resetBtn.addEventListener('click', resetTimer);
 
-// Klikken op het hele scherm stopt het alarm ook voor het gemak
+// Tikken op het scherm stopt het gepiep en reset naar de beginstand
 document.addEventListener('click', (e) => {
-  // Voorkom dubbele triggering als we specifiek op de actieknop drukken
-  if (alarmInterval && e.target !== actionBtn) {
+  if (isAlarming && e.target !== actionBtn) {
     stopAlarm();
+    resetUI();
   }
 });
 
@@ -251,6 +278,10 @@ function loadPreferences() {
 
   if (savedMin !== null) inputMin.value = savedMin;
   if (savedSec !== null) inputSec.value = savedSec;
+
+  // Format de ingeladen waardes met voorloopnul
+  formatInputPadding(inputMin, 999);
+  formatInputPadding(inputSec, 59);
   
   if (savedWakeLock === 'true') {
     wakeLockRequested = true;
