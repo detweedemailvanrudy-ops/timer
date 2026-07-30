@@ -1,4 +1,4 @@
-const CACHE_NAME = 'timer-pwa-v5';
+const CACHE_NAME = 'timer-pwa-v6';
 
 // Alleen de bestanden cachen die echt als bestand op de server staan
 const ASSETS_TO_CACHE = [

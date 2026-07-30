@@ -6,7 +6,7 @@ const inputMin = document.getElementById('inputMin');
 const inputSec = document.getElementById('inputSec');
 const timeDisplay = document.getElementById('timeDisplay');
 const actionBtn = document.getElementById('actionBtn');
-const resetBtn = document.getElementById('resetBtn'); // Nieuw
+const resetBtn = document.getElementById('resetBtn');
 const progressCircle = document.getElementById('progressCircle');
 
 // --- STATE ---
@@ -18,10 +18,12 @@ let initialTotalSeconds = 0;
 let isPaused = false;
 let isRunning = false;
 
-// Web Audio API piepje
+// --- AUDIO LOGICA (NIEUW) ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let alarmInterval = null;
+let alarmTimeout = null;
 
-function playBeep() {
+function playSingleBeep() {
   if (audioCtx.state === 'suspended') audioCtx.resume();
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
@@ -31,7 +33,34 @@ function playBeep() {
   osc.frequency.value = 880; 
   gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
   osc.start();
-  osc.stop(audioCtx.currentTime + 0.6);
+  osc.stop(audioCtx.currentTime + 0.3); // Kortere, strakke piep
+}
+
+// Start een repeterend alarm van max 30 sec
+function startAlarm() {
+  playSingleBeep(); // Direct de eerste piep
+  
+  // Herhaal de piep elke seconde
+  alarmInterval = setInterval(() => {
+    playSingleBeep();
+  }, 1000);
+
+  // Stop het alarm automatisch na 30 seconden (30.000 ms)
+  alarmTimeout = setTimeout(() => {
+    stopAlarm();
+  }, 30000);
+}
+
+// Stop het alarm handmatig of automatisch
+function stopAlarm() {
+  if (alarmInterval) {
+    clearInterval(alarmInterval);
+    alarmInterval = null;
+  }
+  if (alarmTimeout) {
+    clearTimeout(alarmTimeout);
+    alarmTimeout = null;
+  }
 }
 
 // --- SCREEN WAKE LOCK LOGICA ---
@@ -98,6 +127,9 @@ function updateDisplay() {
 }
 
 function handleActionButton() {
+  // Als het alarm nog piept, stopt een klik op de knop direct het geluid
+  stopAlarm();
+
   if (!isRunning && !isPaused) {
     startTimer();
   } else if (isRunning && !isPaused) {
@@ -108,6 +140,7 @@ function handleActionButton() {
 }
 
 function startTimer() {
+  stopAlarm(); // Zeker weten dat eventueel oud alarm uit is
   if (audioCtx.state === 'suspended') audioCtx.resume();
 
   const mins = parseInt(inputMin.value, 10) || 0;
@@ -123,14 +156,13 @@ function startTimer() {
   localStorage.setItem('savedMin_v2', inputMin.value);
   localStorage.setItem('savedSec_v2', inputSec.value);
 
-  // UI instellen voor lopende timer
   inputGroup.classList.add('hidden');
   timeDisplay.classList.remove('hidden');
-  resetBtn.classList.add('hidden'); // Verberg reset-knop als hij loopt
+  resetBtn.classList.add('hidden');
   
   actionBtn.textContent = 'Pauze';
   actionBtn.classList.remove('btn-primary');
-  actionBtn.style.backgroundColor = '#f59e0b'; // Oranje
+  actionBtn.style.backgroundColor = '#f59e0b';
   actionBtn.style.color = 'white';
 
   updateDisplay();
@@ -147,7 +179,7 @@ function tick() {
 
   if (totalSeconds <= 0) {
     clearInterval(timerInterval);
-    playBeep();
+    startAlarm(); // Start de 30-seconden pieploop
     completeTimer();
   }
 }
@@ -156,9 +188,7 @@ function pauseTimer() {
   clearInterval(timerInterval);
   isPaused = true;
   actionBtn.textContent = 'Hervat';
-  actionBtn.style.backgroundColor = '#10b981'; // Groen
-  
-  // Toon het reset knopje alleen tijdens pauze
+  actionBtn.style.backgroundColor = '#10b981';
   resetBtn.classList.remove('hidden');
 }
 
@@ -166,10 +196,7 @@ function resumeTimer() {
   isPaused = false;
   actionBtn.textContent = 'Pauze';
   actionBtn.style.backgroundColor = '#f59e0b';
-  
-  // Verberg het reset knopje weer als we verdergaan
   resetBtn.classList.add('hidden');
-  
   timerInterval = setInterval(tick, 1000);
 }
 
@@ -177,9 +204,13 @@ function completeTimer() {
   isRunning = false;
   isPaused = false;
   resetUI();
+  
+  // Verander knoptekst tijdelijk naar "OK" of "Stop Alarm" als het alarm afgaat
+  actionBtn.textContent = 'OK';
 }
 
 function resetTimer() {
+  stopAlarm(); // Stop ook het geluid bij een reset
   clearInterval(timerInterval);
   isRunning = false;
   isPaused = false;
@@ -202,7 +233,15 @@ function resetUI() {
 
 // Events
 actionBtn.addEventListener('click', handleActionButton);
-resetBtn.addEventListener('click', resetTimer); // Klik op het kleine knopje = reset
+resetBtn.addEventListener('click', resetTimer);
+
+// Klikken op het hele scherm stopt het alarm ook voor het gemak
+document.addEventListener('click', (e) => {
+  // Voorkom dubbele triggering als we specifiek op de actieknop drukken
+  if (alarmInterval && e.target !== actionBtn) {
+    stopAlarm();
+  }
+});
 
 // --- INSTELLINGEN LADEN ---
 function loadPreferences() {
