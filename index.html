@@ -50,31 +50,19 @@
             <input type="number" id="inputSec" min="0" max="59" placeholder="00" value="00" />
           </div>
 
-          <!-- Klok display (zichtbaar als timer loopt/gepauzeerd is) -->
-          <div id="timeDisplay" class="time-display hidden">05:00</div>
-		  <!-- Inhoud in het midden van de cirkel -->
-			<div class="timer-content">
-			  <!-- Invoervelden (stilstaand) -->
-			  <div id="inputGroup" class="time-inputs">
-				<input type="number" id="inputMin" min="0" max="999" placeholder="00" value="05" />
-				<span class="colon">:</span>
-				<input type="number" id="inputSec" min="0" max="59" placeholder="00" value="00" />
-			  </div>
-
-			  <!-- Klok display & Reset knop (actief) -->
-			  <div class="active-timer-wrapper">
-				<div id="timeDisplay" class="time-display hidden">05:00</div>
-				
-				<!-- Klein Reset-knopje met een SVG herhaalteken -->
-				<button id="resetBtn" class="reset-btn hidden" aria-label="Reset timer">
-				  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-					<polyline points="1 4 1 10 7 10"></polyline>
-					<path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-				  </svg>
-				  <span>Reset</span>
-				</button>
-			  </div>
-			</div>
+          <!-- Klok display & Reset knop (zichtbaar als timer loopt/gepauzeerd is) -->
+          <div class="active-timer-wrapper">
+            <div id="timeDisplay" class="time-display hidden">05:00</div>
+            
+            <!-- Klein Reset-knopje met SVG icoon -->
+            <button id="resetBtn" class="reset-btn hidden" aria-label="Reset timer">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+              </svg>
+              <span>Reset</span>
+            </button>
+          </div>
         </div>
       </div>
     </main>
