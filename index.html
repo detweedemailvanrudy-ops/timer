@@ -2,12 +2,13 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Timer PWA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Timer</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0f172a" />
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='112' fill='%230f172a'/><circle cx='256' cy='256' r='180' fill='none' stroke='%2310b981' stroke-width='32'/><path d='M256 130V256L330 330' fill='none' stroke='%23f8fafc' stroke-width='32' stroke-linecap='round' stroke-linejoin='round'/></svg>" />
+  <meta name="theme-color" content="#ffffff" />
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='112' fill='%23ffffff'/><circle cx='256' cy='256' r='180' fill='none' stroke='%2310b981' stroke-width='32'/><path d='M256 130V256L330 330' fill='none' stroke='%231f2937' stroke-width='32' stroke-linecap='round' stroke-linejoin='round'/></svg>" />
 </head>
 <body>
   <div class="app-container">
@@ -20,34 +21,80 @@
       </button>
     </header>
 
-    <!-- Timer Weergave -->
-    <main class="timer-section">
-      <!-- Invoervelden (zichtbaar als timer stilstaat) -->
-      <div id="inputGroup" class="time-inputs">
-        <div class="input-field">
-          <input type="number" id="inputMin" min="0" max="999" placeholder="00" value="05" />
-          <label for="inputMin">min</label>
-        </div>
-        <span class="colon">:</span>
-        <div class="input-field">
-          <input type="number" id="inputSec" min="0" max="59" placeholder="00" value="00" />
-          <label for="inputSec">sec</label>
+    <!-- Cirkel Timer Sectie -->
+    <main class="timer-container">
+      <div class="circular-progress">
+        <!-- SVG voor de cirkelrand -->
+        <svg viewBox="0 0 36 36" class="circular-chart">
+          <!-- Achtergrond cirkel (grijs) -->
+          <path class="circle-bg"
+            d="M18 2.0845
+              a 15.9155 15.9155 0 0 1 0 31.831
+              a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+          <!-- Voortgangs cirkel (groen) -->
+          <path id="progressCircle" class="circle-progress-bar"
+            stroke-dasharray="100, 100"
+            d="M18 2.0845
+              a 15.9155 15.9155 0 0 1 0 31.831
+              a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+        </svg>
+
+        <!-- Inhoud in het midden van de cirkel -->
+        <div class="timer-content">
+          <!-- Invoervelden (zichtbaar als timer stilstaat) -->
+          <div id="inputGroup" class="time-inputs">
+            <input type="number" id="inputMin" min="0" max="999" placeholder="00" value="05" />
+            <span class="colon">:</span>
+            <input type="number" id="inputSec" min="0" max="59" placeholder="00" value="00" />
+          </div>
+
+          <!-- Klok display (zichtbaar als timer loopt/gepauzeerd is) -->
+          <div id="timeDisplay" class="time-display hidden">05:00</div>
+		  <!-- Inhoud in het midden van de cirkel -->
+			<div class="timer-content">
+			  <!-- Invoervelden (stilstaand) -->
+			  <div id="inputGroup" class="time-inputs">
+				<input type="number" id="inputMin" min="0" max="999" placeholder="00" value="05" />
+				<span class="colon">:</span>
+				<input type="number" id="inputSec" min="0" max="59" placeholder="00" value="00" />
+			  </div>
+
+			  <!-- Klok display & Reset knop (actief) -->
+			  <div class="active-timer-wrapper">
+				<div id="timeDisplay" class="time-display hidden">05:00</div>
+				
+				<!-- Klein Reset-knopje met een SVG herhaalteken -->
+				<button id="resetBtn" class="reset-btn hidden" aria-label="Reset timer">
+				  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+					<polyline points="1 4 1 10 7 10"></polyline>
+					<path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+				  </svg>
+				  <span>Reset</span>
+				</button>
+			  </div>
+			</div>
         </div>
       </div>
-
-      <!-- Klok display (zichtbaar als timer loopt/gepauzeerd is) -->
-      <div id="timeDisplay" class="time-display hidden">05:00</div>
     </main>
 
-    <!-- Bedieningsknoppen -->
+    <!-- Hoofd Actieknop -->
     <footer class="controls">
-      <button id="startBtn" class="btn btn-primary">Start</button>
-      <button id="pauseBtn" class="btn btn-secondary hidden">Pauze</button>
-      <button id="resetBtn" class="btn btn-outline hidden">Reset</button>
+      <button id="actionBtn" class="btn btn-primary">Start</button>
     </footer>
 
   </div>
 
   <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('SW geregistreerd:', reg.scope))
+          .catch((err) => console.error('SW mislukt:', err));
+      });
+    }
+  </script>
 </body>
 </html>

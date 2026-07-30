@@ -1,5 +1,5 @@
 {
-  "name": "PWA Timer",
+  "name": "Timer",
   "short_name": "Timer",
   "description": "Een eenvoudige timer-app die je scherm actief houdt.",
   "start_url": "./index.html",
